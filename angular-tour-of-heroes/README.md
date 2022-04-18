@@ -1,10 +1,10 @@
-Tour of Heroes notes
+# Tour of Heroes notes
 
-# Create a new workspace:
+## Create a new workspace:
 
 `ng new name-of-a-project`
 
-# Launch the application:
+## Launch the application:
 
 first go to the workspace directory:
 `cd angular-tour-of-heroes`
@@ -16,3 +16,10 @@ Then launch the application:
 The ng serve command builds the app, starts the development server, watches the source files, and rebuilds the application as you make changes to those files.
 
 The --open flag opens a browser to http://localhost:4200.
+
+
+## Angular Components
+
+continue with this:
+
+https://angular.io/tutorial/toh-pt0#angular-components
