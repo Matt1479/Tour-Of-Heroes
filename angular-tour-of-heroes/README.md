@@ -137,7 +137,8 @@ Passing a hero object into hero-detail.component through @Input decorator (in th
 one way data binding (from the child component to the parent component):
 <app-hero-detail [hero]="selectedHero"></app-hero-detail>
 
-
+<br><br>
+<br><br>
 
 ////////////////////////////////////////////////////
 
