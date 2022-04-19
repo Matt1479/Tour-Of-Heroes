@@ -129,8 +129,15 @@ When the current row hero is the same as the selectedHero, Angular adds the sele
 
 ## 3. Create a Feature Component
 
+Passing a hero object into hero-detail.component through @Input decorator (in the HeroDetailComponent class):
 
-https://angular.io/tutorial/toh-pt3#create-a-feature-component
+`@Input() hero?: Hero;`
 
 
+one way data binding (from the child component to the parent component):
+<app-hero-detail [hero]="selectedHero"></app-hero-detail>
+
+
+
+## 4. Add Services - TO DO
 
