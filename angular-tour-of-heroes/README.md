@@ -1,4 +1,4 @@
-# Tour of Heroes notes
+a# Tour of Heroes notes
 
 ## Create a new workspace:
 
@@ -279,7 +279,7 @@ The common way to create components is to make them atomic, which means every si
 ## **@Input() decorator**
 https://angular.io/guide/inputs-outputs
 
-(Decorator is a design pattern/function that is used to separate **modification** or **decoration** of a class **without modifying the original source code**).
+(<a href="decorator">Decorator</a> is a design pattern/function that is used to separate **modification** or **decoration** of a class **without modifying the original source code**).
 
 **@Input** decorator is used to share data between **child** and **parent** components
 
@@ -346,5 +346,237 @@ To watch for changes on an `@Input()` property, use `OnChanges` lifecycle hook.
 <br><br>
 <br><br>
 
-## 4. Add Services - TO DO
+## 4. **Add Services**
 
+<br>
+
+
+### **Services in Angular**
+
+Services are a way of sharing data among classes that *don't know each other*. Services in Angular are being created using Dependency Injection (read below) instead of the new keyword (which creates an instance of user-defined object type).
+
+### **Dependency Injection in Angular**
+Dependencies are services or objects that a class needs to perform its function. Dependency Injection, or DI, is a design pattern in which **class requests** dependencies from **external sources** rather than creating them.
+
+<br>
+
+### **Creating the service**
+
+`ng generate service serviceName`
+
+
+<br>
+
+
+### `@Injectable()` services
+
+the `export class nameOfService {}` class is going to provide an injectable service, and it can also have its own injected dependencies
+
+The `@Injectable()` decorator accepts a metadata object from the service, the same way `@Component()` decorator did for the component classes (e.g. selector).
+
+<br>
+
+### **Get hero(object) data**
+
+The `HeroService` could get hero data from anywhere - a web service, local storage, or a mock data source.
+
+
+Removing data access from components means you can change your mind about the implementation anytime, without touching any components.
+
+
+We're going to implement mock data delivery
+
+
+Import the `Class` and `OBJECTS`:
+
+```
+import { Class } from './path';
+import { OBJECTS } from './path';
+```
+
+Add a getObjects method to return an array of objects:
+
+```
+getObjects(): Object[] {
+    return OBJECTS;
+}
+```
+
+### **Providing the service**
+
+You must make the (Hero)service available to the DI system before Angular can *inject* it into the (Heroes)component by registering provider.
+A **provider** is something that can create or deliver a service;
+
+
+To make sure that the HeroService can provide this service, register it with the *injector*, which is the object that is responsible for choosing and injecting the provider where the application requires it.
+
+
+By default, the Angular CLI command `ng generate service` registers a provider with the root *injector* for your service by including provider metadata, that is `prodidedIn: 'root'` in the `@Injectable()` <a href="#decorator">decorator</a>:
+
+```
+@Injectable({
+  providedIn: 'root',
+})
+```
+
+
+When you provide a service at the root level, Angular creates a single, shared instance of `HeroService` and injects into any class that asks for it. Registering the provider in the `@Injectable` metadata also allows Angular to optimize an application by removing the service if it turns out to be not used after all.
+
+
+Now let's inject the `(Hero)Service` into the `(Heroes)Component`
+
+
+### **Update (Heroes)Component**
+
+the whole process is here: https://angular.io/tutorial/toh-pt4#update-heroescomponent
+
+
+### **Calling methods in ngOnInit() instead of in constructors**
+
+Generally you should call methods in ngOnInit() instead of in constructors. The reason is: it's not what the constructor should do, the constructor is here only to do minimal initialization such as wiring constructor parameters to properties.
+
+Instead call the method inside the **ngOnInit lifecycle hook** and let Angular call ngOnInit() at an appropriate time *after* constructing a `(Heroes)Component` instance.
+
+```
+ngOnInit(): void {
+    this.someMethod(); // *this* refers to an object in this case
+}
+```
+
+<br>
+
+### **Observable data**
+
+The `HeroService.getHeroes()` method has a synchronous signature, which implies that the HeroService can fetch heroes synchronously.
+
+**Synchronous request**: A synchronous request blocks the client until operation completes. In such case, javascript engine of the browser is blocked. This kind of requests is being deprecated.
+
+**Asynchronous request**: An asynchronous request doesn't block the client e.g. browser is responsive. At that time, user can perform another operations also. In such case, javascript engine of the browser is not blocked.
+
+<br>
+<br>
+
+`this.heroes = this.heroService.getHeroes();`
+
+
+This will not work in a real application. It only works now because our service currently returns *mock heroes*. But soon the application will fetch heroes from a remote server, which is an inherently *asynchronous* operation.
+
+The `HeroService` must wait for the server to respond, `getHeroes()` method cannot return immediately with hero data, and the browser will not block while the service waits.
+
+`HeroService.getHeroes()` must have an *asynchronous signature* of some kind.
+
+In this project, `HeroService.getHeroes()` will return an `Observable` because it will eventually use the Angular `HttpClient.get` method to fetch the heroes and `HttpClient.get()` returns an `Observable`.
+
+<br>
+<br>
+
+
+### **Using observables to pass values**
+
+Observables provide support for passing messages between parts of your application. They are used frequently in Angular and are a technique for event handling, asynchronous programming, and handling multiple values.
+
+
+The observer pattern is a software design pattern in which an object called the *subject*, maintains a list of its dependents, called *observers*, and notifies them automatically of state changes. This pattern is similar (but not identical) to the publish/subscribe design pattern.
+
+
+Observatives are declarative - that is, you define a function for publishing values, but it is not executed until a consumer subscribes to it. The subscribed consumer then receives notification until the function completes, or until they unsubscribe.
+
+
+An observable can deliver multiple values of any type - literals, messages, or events, depending on the context.
+
+The API for receiving values is the same whether the values are delivered synchronously or asynchronously.
+
+Because setup and teardown logic are both handled by the observable, your application code only needs to worry about subscribing to consume values, and when done, unsubscribing. Whether the stream was keystrokes, an HTTP response, or an internal timer, the interface for listening to values and stopping listening is the same.
+
+<br>
+
+Because of these advantages, observatives are used extensively within Angular, and for application development as well.
+
+<br>
+
+### **Basic usage and terms**
+
+As a publisher, you create an `Observable` instance that defines a *subscriber* function. This is the function that is executed when a consumer calls the `subscribe()` method. The subscriber function defines how to obtain or generate values or messages to be published.
+
+To execute the observable you have created and begin receiving notifications, you call its `subscribe()` method, passing an *observer*. This is a JavaScript object that defines the handlers for the notifications you receive. The `subscribe()` call returns a `Subscription` object that has an `unsubscribe()` method, which you call to stop receiving notifications.
+
+### **Defining observers**
+
+A handler for receiving observable notifications implements the `Observer` interface. It is an object that defines callback methods to handle the three types of notifications that an observable can send:
+
+| NOTIFICATION TYPE | DETAILS     |
+| ----------------- | ----------- |
+| `Next`      | Required. A handler for each delivered value. Called zero or more times after execution starts       |
+| `Error`   | Optional. A handler for an error notification. An error halts execution of the observable instance        |
+| `complete` | Optional. A handler for the execution-complete notification. Delayed values can continue to be delivered to the next handler after execution is complete |
+|
+
+An observer object can define any combination of these handlers. If you don't supply a handler for a notification type, the observer ignores notifications of that type.
+
+### **Subscribing**
+
+An `Observable` instance begins publishing values only when someone subscribes to it. You subscribe by calling the `subscribe()` method of the instance, passing an observer object to receive the notifications.
+
+<br><br>
+
+### **Observables in Angular**
+
+<br>
+
+### **Observable HeroService**
+
+In this example we'll simulate getting data from the server with RxJS `of()` function
+
+
+Import the `Observable` and `of` symbols from RxJS into `HeroService`:
+
+`import { Observable, of } from 'rxjs';`
+
+
+Replace the `getHeroes()` method with the following:
+
+```
+getHeroes(): Observable<Hero[]> {
+    const heroes = of(HEROES);
+    return heroes;
+}
+```
+
+<br>
+
+### **Subscribe in HeroesComponent**
+
+The `HeroService.getHeroes` method used to return a `Hero[]`. Now it returns an `Observable<Hero[]>`.
+
+Now I have to adjust to that difference in `HeroesComponent`.
+
+<br>
+
+Replace the `getHeroes` method with the following code:
+```
+getHeroes(): void {
+  this.heroService.getHeroes()
+      .subscribe(heroes => this.heroes = heroes);
+}
+```
+
+`Observable.subscribe()` is the critical difference.
+
+<br>
+
+The previous version assigns an array of heroes to the component's `heroes` property. The assignment occurs *synchronously*, as if the server could return heroes instantly or the browser could freeze UI while it waited for the server's response.
+
+
+This won't work when the `HeroService` is actually making requests of a remote server.
+
+<br>
+
+The new version waits for the `Observable` to emit the array of heroes - which could happen now or several minutes from now. The `subscribe()` method passes the emitted array to the callback, which sets the component's `heroes` property.
+
+This asynchronous approach will work when the `HeroService` requests heroes from the server.
+
+<br>
+<br>
+
+### **NEXT: https://angular.io/tutorial/toh-pt4#show-messages**
+7:51 PM
