@@ -86,7 +86,7 @@ The HeroesComponent is declared in the @NgModule.declarations array.
 
 ## 2. Display a List
 
-**ngFor**
+### *ngFor
 
 The *ngFor is Angular's repeater directive. It repeats the host element for each element in a list.
 
@@ -102,7 +102,7 @@ item	Holds the current item object for each iteration through the list.
 
 
 
-**Event binding**
+### Event binding
 
 a button with a click event binding:
 
@@ -110,12 +110,12 @@ a button with a click event binding:
 
 
 
-**ngIf**
+### *ngIf
 
 <div *ngIf="ifThisExists">(then display this div)</div>
 
 
-**Angular class binding**
+### Angular class binding
 
 Angular's class binding can add and remove a CSS class conditionally. Add [class.some-css-class]="some-condition" to the element you want to style.
 
