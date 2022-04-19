@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms'; // NgModel lives here
+import { FormsModule } from '@angular/forms'; // importing this so that the NgModel will work
 
 import { AppComponent } from './app.component';
 import { HeroesComponent } from './heroes/heroes.component'; // automatically declared by CLI

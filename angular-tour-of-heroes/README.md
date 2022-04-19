@@ -19,6 +19,8 @@ The --open flag opens a browser to http://localhost:4200.
 
 <br><br>
 
+
+## 1. The Hero Editor
 ## Angular Components
 
 **@Component**
@@ -80,4 +82,55 @@ The HeroesComponent is declared in the @NgModule.declarations array.
 `  AppComponent,`
 `  HeroesComponent`
 `],`
+
+
+## 2. Display a List
+
+**ngFor**
+
+The *ngFor is Angular's repeater directive. It repeats the host element for each element in a list.
+
+sample syntax: <li *ngFor="let item of items"></li>
+
+The syntax in this example is as follows:
+
+<li>	The host element.
+
+items	Holds the items list from the Component class, the items list.
+
+item	Holds the current item object for each iteration through the list.
+
+
+
+**Event binding**
+
+a button with a click event binding:
+
+<button type="button" (click)="someFunction()"></button>
+
+
+
+**ngIf**
+
+<div *ngIf="ifThisExists">(then display this div)</div>
+
+
+**Angular class binding**
+
+Angular's class binding can add and remove a CSS class conditionally. Add [class.some-css-class]="some-condition" to the element you want to style.
+
+Toggling a class with the [class.selected] binding:
+
+for example: <button type="button" (click)="onSelect(hero)" [class.selected] = "hero === selectedHero"></button>
+
+When the current row hero is the same as the selectedHero, Angular adds the selected CSS class. When the two heroes are different, Angular removes the class.
+
+
+
+## 3. Create a Feature Component
+
+
+https://angular.io/tutorial/toh-pt3#create-a-feature-component
+
+
 
