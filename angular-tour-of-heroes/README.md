@@ -161,7 +161,7 @@ app.component.html - is the component **template**, written in HTML
 
 app.component.css - is the component's **private CSS** styles
 
-### Interpolation binding syntax:
+### Interpolation (insertion) binding syntax:
 <someTag>{{ someValue }}</someTag>
 
 <br>
