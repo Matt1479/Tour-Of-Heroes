@@ -1,6 +1,6 @@
 <h2>My Heroes</h2>
 
-<ul class="heroes">
+<ul *ngIf="heroes$ | async as heroes" class="heroes">
   <li *ngFor="let hero of heroes">
     <button
       type="button"
