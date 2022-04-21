@@ -19,7 +19,7 @@ The --open flag opens a browser to http://localhost:4200.
 
 <br><br>
 
-## 1. The Hero Editor
+## **1. The Hero Editor**
 
 ## Angular Components
 
@@ -113,7 +113,7 @@ for example: <button type="button" (click)="onSelect(hero)" [class.selected] = "
 
 When the current row hero is the same as the selectedHero, Angular adds the selected CSS class. When the two heroes are different, Angular removes the class.
 
-## 3. Create a Feature Component
+## **3. Create a Feature Component**
 
 Passing a hero object into hero-detail.component through @Input decorator (in the HeroDetailComponent class):
 
@@ -217,7 +217,7 @@ The AppModule (app.module.ts) is used to declare the application components in o
 <br>
 <br>
 
-2. **Display a List.**
+## **2. Display a List.**
 
 ## exporting an array of objects:
 
@@ -617,7 +617,7 @@ This template binds directly to the component's `messageService`.
 <br><br>
 <br><br>
 
-5. Add Navigation
+## **5. Add Navigation**
 
 <br>
 
@@ -1061,4 +1061,299 @@ goBack(): void {
 <br><br>
 <br><br>
 
-## NEXT: Get Data from a Server
+## **6. Get data from a server**
+
+In this section we'll add the following data persistence (stored data won't disappear) features with help from Angular's `HttpClient`.
+
+- The `HeroService` gets hero data with HTTP requests
+- Users can add, edit, and delete heroes and save these changes over HTTP
+- Users can search for heroes by name
+
+<br>
+
+### **Enable HTTP services**
+
+`HttpClient` is Angular's mechanism for communicating with a remote server over HTTP.
+
+Make `Httpclient` available everywhere in the application in two steps. First add it to the root `AppModule` by importing it:
+
+`import { HttpClientModule } from '@angular/common/http';`
+
+Next, still in the `AppModule`, add `HttpClientModule` to the `imports` array:
+
+```
+@NgModule({
+  imports: [
+    HttpClientModule,
+  ],
+})
+```
+
+### **Simulate a data server**
+
+This tutorial sample mimics communication with a remote data server by using the <a href="https://github.com/angular/angular/tree/master/packages/misc/angular-in-memory-web-api">In-memory Web API</a> module.
+
+After installing the module, the application will make requests to and receive responses from the `HttpClient` without knowing that the _In-memory Web API_ is intercepting those requests, applying them to an in-memory data store, and returning simulated responses.
+
+<br>
+
+By using the In-memory Web API, you won' have to set up a server to leran about `HttpClient`.
+
+(The In-memory Web API module has nothing to do with HTTP in Angular.)
+
+<br>
+
+Install the In-memory Web API package from npm with the following command:
+
+`npm install angular-in-memory-web-api --save`
+
+In the `AppModule`, import the `HttpClientInMemoryWebApiModule` and add the `InMemoryDataService` class, which you will create in a moment:
+
+`import { HttpClientInMemoryWebApiModule } from 'angular-in-memory-web-api';`
+`import { InMemoryDataService } from './in-memory-data.service';`
+
+After the `HttpClientModule`, add the `HttpClientInMemoryWebApiModule` to the `AppModule` `imports` array and configure it with the `InMemoryDataService`:
+
+```
+HttpClientModule,
+
+// The HttpClientInMemoryWebApiModule module intercepts HTTP requests
+// and returns simulated server responses.
+// Remove it when a real server is ready to receive requests.
+HttpClientInMemoryWebApiModule.forRoot(
+  InMemoryDataService, { dataEncapsulation: false }
+)
+```
+
+The `ForRoot()` configuration method takes an `InMemoryDataService` class that primes the in-memory database.
+
+Generate the class `src/app/in-memory-data.service.ts` with the following command:
+
+`ng generate service InMemoryData`
+
+Replace the default contents of `in-memory-data.service.ts` with the following:
+
+```
+import { Injectable } from '@angular/core';
+import { InMemoryDbService } from 'angular-in-memory-web-api';
+import { Hero } from './hero';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class InMemoryDataService implements InMemoryDbService {
+  createDb() {
+    const heroes = [
+      { id: 11, name: 'Dr Nice' },
+      { id: 12, name: 'Narco' },
+      { id: 13, name: 'Bombasto' },
+      { id: 14, name: 'Celeritas' },
+      { id: 15, name: 'Magneta' },
+      { id: 16, name: 'RubberMan' },
+      { id: 17, name: 'Dynama' },
+      { id: 18, name: 'Dr IQ' },
+      { id: 19, name: 'Magma' },
+      { id: 20, name: 'Tornado' }
+    ];
+    return {heroes};
+  }
+
+  // Overrides the genId method to ensure that a hero always has an id.
+  // If the heroes array is empty,
+  // the method below returns the initial number (11).
+  // if the heroes array is not empty, the method below returns the highest
+  // hero id + 1.
+  genId(heroes: Hero[]): number {
+    return heroes.length > 0 ? Math.max(...heroes.map(hero => hero.id)) + 1 : 11;
+  }
+}
+```
+
+The `in-memory-data.service.ts` file will take over the function of `mock-heroes.ts`. However, don't delete `mock-heroes.ts` yet, as you still need it for a few more steps of this tutorial.
+
+When the server is ready, you'll detach (disconnect) the In-memory Web Api, and the application's requests will go through to the server.
+
+### **Heroes and HTTP**
+
+In the `HeroService`, import `HttpClient` and `HttpHeaders`:
+
+`import { HttpClient, HttpHeaders } from '@angular/common/http';`
+
+Still in the `HeroService`, inject `HttpClient` into the constructor in a private property called `http`.
+
+```
+constructor(
+  private http: HttpClient,
+  private messageService: MessageService) { }
+```
+
+Notice that you keep injecting the `MessageService` but since you'll call it so frequently, wrap it in a private `log()` method:
+
+```
+/** Log a HeroService message with the MessageService */
+private log(message: string) {
+  this.messageService.add(`HeroService: ${message}`);
+}
+```
+
+Define the `heroesURL` of the form `:base/:collectionName` with the address of the heroes resource on the server. Here `base` is the resource to which requests are made, and `collectionName` is the heroes data object in the `in-memory-data-service.ts`:
+
+`private heroesURL = 'api/heroes'; // URL to web api`
+
+<br>
+
+#### **Get heroes with HttpClient**
+
+The current `HeroService.getHeroes()` uses RxJS `of()` function to return an array of mock heroes as an `Observable<Hero[]>`:
+
+```
+getHeroes(): Observable<Hero[]> {
+  const heroes = of(HEROES);
+  return heroes;
+}
+```
+
+Convert that method to use `HttpClient` as follows:
+
+```
+/** GET heroes from the server */
+getHeroes(): Observable<Hero[]> {
+  return this.http.get<Hero[]>(this.heroesURL)
+}
+```
+
+Now the data loads from the mock server.
+
+You've swapped `of()` for `http.get()` and the application keeps working without any other changes because both functions return an `Observable<Hero[]>`.
+
+#### **HttpClient methods return one value**
+
+All `HttpClient` methods return an RxJS `Observable` of something.
+
+HTTP is a request/response protocol. You make a request, it returns a single response.
+
+In general, an observable _can_ return multiple values over time. An observable from `HttpClient` always emits a single value and then completes, never to emit again.
+
+This particular `HttpClient.get()` call returns an `Observable<Hero[]>`; that is, "_an observable of hero arrays_". In practice, it will only return a single hero array.
+
+#### **HttpClient.get() returns response data**
+
+`HttpClient.get()` returns the body of the response as an untyped JSON object by default. Applying the optional type specifier, `<Hero[]>`, adds TypeScript capabilities, which reduce errors during compile time.
+
+The server's data API determines the shape of the JSON data. The _Tour of Heroes_ data API returns the hero data as an array.
+
+`.`
+
+Other APIs may bury the data that you want within an object. You might have to dig that data out by processing the `Observable` result with the RxJS `map()` opertator.
+
+`.`
+
+#### **Error handling**
+
+Things go wrong, especially when you're getting data from a remote server. The `HeroService.getHeroes()` method should catch errors and do something appropriate.
+
+To catch errors, you **"pipe" the observable** result from `http.get()` through an RxJS `catchError()` operator.
+
+Import the `catchError` symbol from `rxjs/operators`, along with some other operators you'll need later:
+
+`import { catchError, map, tap } from 'rxjs/operators';`
+
+<br>
+
+Now extend the observable result with the `pipe()` method and give it a `catchError()` operator:
+
+```
+getHeroes(): Observable<Hero[]> {
+  return this.http.get<Hero[]>(this.heroesUrl)
+    .pipe(
+      catchError(this.handleError<Hero[]>('getHeroes', []))
+    );
+}
+```
+
+The `catchError()` operator intercepts an **`Observable` that failed**. The operator then passes the error to the error handling function.
+
+The following `handleError()` method reports the error and then returns an innocuous(harmless) result so that the application keeps working.
+
+#### **handleError**
+
+The following `handleError()` will be shared by many `HeroService` methods so it's generalized to meet their different needs.
+
+Instead of handling the error directly, it returns an error handler function to `catchError` that it has configured with both the name of the operation that failed and a safe return value:
+
+```
+/**
+ * Handle Http operation that failed.
+ * Let the app continue.
+ *
+ * @param operation - name of the operation that failed
+ * @param result - optional value to return as the observable result
+ */
+private handleError<T>(operation = 'operation', result?: T) {
+  return (error: any): Observable<T> => {
+
+    // TODO: send the error to remote logging infrastructure
+    console.error(error); // log to console instead
+
+    // TODO: better job of transforming error for user consumption
+    this.log(`${operation} failed: ${error.message}`);
+
+    // Let the app keep running by returning an empty result.
+    return of(result as T);
+  };
+}
+```
+
+After reporting the error to the console, the handler constructs a user friendly message and returns a safe value to the application so the application can keep working.
+
+Because each service method returns a different kind of `Observable` result, `handleError()` takes a type parameter so it can return the safe value as the type that the application expects.
+
+<br>
+
+#### **Tap into the Observable**
+
+The `HeroService` methods will tap into the flow of observable values and send a message, using the `log()` method, to the message area at the bottom of the page.
+
+They'll do that with the RxJS `tap()` operator, which looks at the observable values, does something with those values and passes them along. The `tap()` call back doesn't touch the values themselves.
+
+Here is the final version of `getHeroes()` with the `tap()` that logs the operation:
+
+```
+/** GET heroes from the server */
+getHeroes(): Observable<Hero[]> {
+  return this.http.get<Hero[]>(this.heroesUrl)
+    .pipe(
+      tap(_ => this.log('fetched heroes')),
+      catchError(this.handleError<Hero[]>('getHeroes', []))
+    );
+}
+```
+
+#### **Get hero by id**
+
+Most web APIs support a _get by id_ request in the form `:baseURL/:id`.
+
+Here, the _base URL_ is the `heroesURL` defined in the api/heroes (<a href="https://angular.io/tutorial/toh-pt6#heroes-and-http">this section</a>) and _id_ is the number of the hero that you want to retrieve. For example, `api.heroes/11`.
+
+Update the `HeroService` `getHero()` method with the following to make that request:
+
+```
+/** GET hero by id. Will 404 if id not found */
+getHero(id: number): Observable<Hero> {
+  const url = `${this.heroesUrl}/${id}`;
+  return this.http.get<Hero>(url).pipe(
+    tap(_ => this.log(`fetched hero id=${id}`)),
+    catchError(this.handleError<Hero>(`getHero id=${id}`))
+  );
+}
+```
+
+There are three significant differences from `getHeroes()`:
+
+- `getHero()` constructs a request URL with the desired hero's id
+- The server should respond with a single hero rather than an array of heroes
+- `getHero()` returns an `Observable<Hero>`("_an observable of Hero objects_") rather than an observable of hero _arrays_
+
+### **Update heroes**
+
+Next...
