@@ -8,12 +8,16 @@ import { MessageService } from './message.service';
   providedIn: 'root', // metadata here
 })
 export class HeroService {
-  getHeroes(id: number): Observable<Hero> {
+  getHero(id: number): Observable<Hero> {
     // For now, assume that a hero with the specified `id` always exists.
     // Error handling will be added later
     const hero = HEROES.find((h) => h.id === id)!;
     this.messageService.add(`HeroService: fetched hero id=${id}`);
     return of(hero);
+  }
+
+  getHeroes(): Observable<Hero[]> {
+    return of(HEROES);
   }
 
   constructor(private messageService: MessageService) {}
