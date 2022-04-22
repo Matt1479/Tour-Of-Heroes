@@ -1354,6 +1354,61 @@ There are three significant differences from `getHeroes()`:
 - The server should respond with a single hero rather than an array of heroes
 - `getHero()` returns an `Observable<Hero>`("_an observable of Hero objects_") rather than an observable of hero _arrays_
 
-### **Update heroes**
+#### **Update heroes**
+
+Edit a hero's name in the hero detail view. As you type, the hero name updates the heading at the top of the page. But when you click "go back button", the changes are lost.
+
+If you want changes to persist, you must write them back to the sever.
+
+At the end of the hero detail template, add a save button with a `click` event binding that invokes a new component named `save()`:
+
+`<buttom type="button" (click)="save">save</button>`
+
+In the `HeroDetail` component class, add the following `save()` method, which persists hero name changes using the hero service `updateHero()` method and then navigates back to the previous view:
+
+```
+save(): void {
+  if (this.hero) {
+    this.heroService.updateHero(this.hero)
+      .subscribe(() => this.goBack());
+  }
+}
+```
+
+#### **Add HeroService.updateHero()**
+
+The overall structure of the `updateHero()` method is similar to that of `getHeroes()`, but it uses `http.put()` to persist the changed hero on the server. Add the following to the `HeroService`:
+
+```
+/** PUT: update the hero on the server */
+updateHero(hero: Hero): Observable<any> {
+  return this.http.put(this.heroesUrl, hero, this.httpOptions).pipe(
+    tap(_ => this.log(`updated hero id=${hero.id}`)),
+    catchError(this.handleError<any>('updateHero'))
+  );
+}
+```
+
+The `HttpClient.put()` method takes three parameters:
+
+- The URL
+- The data to update (the modified hero in this case)
+- Options
+
+The URL is unchanged. The heroes web API knows which hero to update by looking at the hero's `id`.
+
+The heroes web API expects a special header in HTTP save requests. That header is in the `httpOptions` constant defined in the `HeroService`. Add the following to the `HeroService` class:
+
+```
+httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+};
+```
+
+Now the saving feature should work. The `save()` method in `HeroDetialComponent` navigates to the previous view.
+
+<br>
+
+### **Add a new hero**
 
 Next...
