@@ -1411,4 +1411,268 @@ Now the saving feature should work. The `save()` method in `HeroDetialComponent`
 
 ### **Add a new hero**
 
-Next...
+Add <input> and <button> element with a (click) event within the `HeroesComponent` template:
+
+```
+<div>
+  <label for="new-hero">Hero name: </label>
+  <input id="new-hero" #heroName />
+
+  <!-- (click) passes input value to add() and then clears the input -->
+  <button type="button" class="add-button" (click)="add(heroName.value); heroName.value=''">
+    Add hero
+  </button>
+</div>
+```
+
+Add the `add()` method to `heroes.component.ts`:
+
+```
+add(name: string): void {
+  name = name.trim();
+  if (!name) { return; }
+  this.heroService.addHero({ name } as Hero)
+    .subscribe(hero => {
+      this.heroes.push(hero);
+    });
+}
+```
+
+Add the `addHero()` method to the `HeroService` class:
+
+```
+/** POST: add a new hero to the server */
+addHero(hero: Hero): Observable<Hero> {
+  return this.http.post<Hero>(this.heroesUrl, hero, this.httpOptions).pipe(
+    tap((newHero: Hero) => this.log(`added hero w/ id=${newHero.id}`)),
+    catchError(this.handleError<Hero>('addHero'))
+  );
+}
+```
+
+`addHero()` differs from `updateHero()` in two ways:
+
+    It calls `HttpClient.post()` instead of `put()`
+    It expects the server to generate an id for the new hero, which it returns in the `Observable<Hero>` to the caller
+
+### **Delete a hero**
+
+Add the following button element to the `HeroesComponent` template:
+
+```
+<button type="button" class="delete" title="delete hero"
+  (click)="delete(hero)">x</button>
+```
+
+Add `delete()` handler to the component class:
+
+```
+delete(hero: Hero): void {
+  this.heroes = this.heroes.filter(h => h !== hero);
+  this.heroService.deleteHero(hero.id).subscribe();
+}
+```
+
+Add a `deleteHero()` method to HeroService:
+
+```
+/** DELETE: delete the hero from the server */
+deleteHero(id: number): Observable<Hero> {
+  const url = `${this.heroesUrl}/${id}`;
+
+  return this.http.delete<Hero>(url, this.httpOptions).pipe(
+    tap(_ => this.log(`deleted hero id=${id}`)),
+    catchError(this.handleError<Hero>('deleteHero'))
+  );
+}
+```
+
+The key points:
+
+    deleteHero() calls HttpClient.delete()
+    The URL is the heroes resource URL plus the id of the hero to delete
+    You don't send data as you did with put() and post()
+    You still send the httpOptions
+
+### **Search by name**
+
+#### HeroService.searchHeroes()
+
+Add `searchHeroes()` method to the `HeroService`:
+
+```
+/* GET heroes whose name contains search term */
+searchHeroes(term: string): Observable<Hero[]> {
+  if (!term.trim()) {
+    // if not search term, return empty hero array.
+    return of([]);
+  }
+  return this.http.get<Hero[]>(`${this.heroesUrl}/?name=${term}`).pipe(
+    tap(x => x.length ?
+       this.log(`found heroes matching "${term}"`) :
+       this.log(`no heroes matching "${term}"`)),
+    catchError(this.handleError<Hero[]>('searchHeroes', []))
+  );
+}
+```
+
+The method returns immediately with an empty array if there is no search term. The rest of it closely resembles `getHeroes()`, the only significant difference being the URL, which includes a query string with the search term.
+
+<br>
+
+#### **Add search to the Dashboard**
+
+In the `DashboardComponent` add the `<app-hero-search>` element:
+
+#### **Create HeroSearchComponent**
+
+Create a HeroSearchComponent with the CLI:
+
+`ng generate component hero-search`
+
+Replace its (template's) contents with <input> and add a list of matching search results:
+
+```
+<div id="search-component">
+  <label for="search-box">Hero Search</label>
+  <input #searchBox id="search-box" (input)="search(searchBox.value)" />
+
+  <ul class="search-result">
+    <li *ngFor="let hero of heroes$ | async" >
+      <a routerLink="/detail/{{hero.id}}">
+        {{hero.name}}
+      </a>
+    </li>
+  </ul>
+</div>
+```
+
+`#searchBox` (the hashTag syntax) is a reference to the element, so you can use that reference to for example refer to it's value in any other element: `searchBox.value`
+
+##### **AsyncPipe**
+
+The `*ngFor` repeats hero objects. Notice that the `*ngFor` iterates over a list called **`heroes$`**, not `heroes`. The `$` is a convention that indicates **`heroes$`** is an `Observable`, not an array.
+
+<br>
+
+`<li *ngFor="let hero of heroes$ | async" >`
+
+<br>
+
+Since `*ngFor` can't do anything with an Observable, use the pipe (`|`) character followed by `async`. This identifies Angular's `AsyncPipe` and subscribes to an `Observable` automatically **so you won't have to do so** in the component class.
+
+<br>
+
+#### **Edit the HeroSearchComponent class**
+
+Replace the generated `HeroSearchComponent` class and metadata as follows:
+
+```
+import { Component, OnInit } from '@angular/core';
+
+import { Observable, Subject } from 'rxjs';
+
+import {
+   debounceTime, distinctUntilChanged, switchMap
+ } from 'rxjs/operators';
+
+import { Hero } from '../hero';
+import { HeroService } from '../hero.service';
+
+@Component({
+  selector: 'app-hero-search',
+  templateUrl: './hero-search.component.html',
+  styleUrls: [ './hero-search.component.css' ]
+})
+export class HeroSearchComponent implements OnInit {
+  heroes$!: Observable<Hero[]>;
+  private searchTerms = new Subject<string>();
+
+  constructor(private heroService: HeroService) {}
+
+  // Push a search term into the observable stream.
+  search(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+  ngOnInit(): void {
+    this.heroes$ = this.searchTerms.pipe(
+      // wait 300ms after each keystroke before considering the term
+      debounceTime(300),
+
+      // ignore new term if same as previous term
+      distinctUntilChanged(),
+
+      // switch to new search observable each time the term changes
+      switchMap((term: string) => this.heroService.searchHeroes(term)),
+    );
+  }
+}
+```
+
+Notice the declaration of `heroes$` an an `Observable`:
+
+`heroes$!: Observable<Hero[]>;`
+
+<br>
+
+#### **The searchTerms RxJS subject**
+
+The `searchTerms` property is an RxJS `Subject`:
+
+```
+private searchTerms = new Subject<string>();
+
+// Push a search term into the observable stream.
+search(term: string): void {
+  this.searchTerms.next(term);
+}
+```
+
+A `Subject` is both a source of observable values and an `Observable` itself. You can use `subscribe()` method on a `Subject`.
+
+<br>
+
+You can also push values into that `Observable` by calling its `next(value)` method as the `search()` method does.
+
+<br>
+
+The event binding to the textbox's `input` event calls the `search()` method:
+
+`<input #searchBox id="search-box" (input)="search(searchBox.value)" />`
+
+<br>
+
+Every time the user types in the textbox, the binding calls `search()` with the textbox value, a "search term". The `searchTerms` becomes an `Observable` emitting a steady stream of search terms.
+
+<br>
+
+#### **Chaining RxJS operators**
+
+Passing new search term directly to `searchHeroes()` after every user keystroke would create an excessive amount of HTTP requests.
+
+<br>
+
+Instead of that, the `ngOnInit()` method pipes the `searchTerms` observable through a sequence of RxJS operators that reduce the number of calls to the `searchHeroes()`, ultimately returning an observable of timely hero search results (each of a `Hero[]`),
+here's a closer look at the code:
+
+```
+this.heroes$ = this.searchTerms.pipe(
+  // wait 300ms after each keystroke before considering the term
+  debounceTime(300),
+
+  // ignore new term if same as previous term
+  distinctUntilChanged(),
+
+  // switch to new search observable each time the term changes
+  switchMap((term: string) => this.heroService.searchHeroes(term)),
+);
+```
+
+Each operator works as follows:
+
+- `debounceTime(300)` waits until the flow of new string events pauses for 300 ms before passing along the latest string.
+
+- `distinctUntilChanged()` ensures that a request is sent only if the filter text changed.
+
+- `switchMap()` calls the search service for each search term that makes it through `debounce()` and `distinctUntilChanged()`. It cancels and discards previous search observables, returning only the latest search service observable.
