@@ -336,8 +336,6 @@ To watch for changes on an `@Input()` property, use `OnChanges` lifecycle hook.
 
 ## 4. **Add Services**
 
-(for now I'm writing everything, I'll fix my notes later)
-
 <br>
 
 ### **Services in Angular**
@@ -366,13 +364,7 @@ The `@Injectable()` decorator accepts a metadata object from the service, the sa
 
 ### **Get hero(object) data**
 
-The `HeroService` could get hero data from anywhere - a web service, local storage, or a mock data source.
-
-Removing data access from components means you can change your mind about the implementation anytime, without touching any components.
-
-We're going to implement mock data delivery
-
-Import the `Class` and `OBJECTS`:
+Importing the `HeroService` through mock data delivery
 
 ```
 import { Class } from './path';
@@ -389,8 +381,9 @@ getObjects(): Object[] {
 
 ### **Providing the service**
 
-You must make the (Hero)service available to the DI system before Angular can _inject_ it into the (Heroes)component by registering provider.
-A **provider** is something that can create or deliver a service;
+Make sure the HeroService is available to the DI system before Angular can _inject_ it into the HeroesComponent by registering provider.
+<br>
+A **provider** is something that can create or deliver a service.
 
 To make sure that the HeroService can provide this service, register it with the _injector_, which is the object that is responsible for choosing and injecting the provider where the application requires it.
 
@@ -491,8 +484,6 @@ A handler for receiving observable notifications implements the `Observer` inter
 | `Next`            | Required. A handler for each delivered value. Called zero or more times after execution starts                                                           |
 | `Error`           | Optional. A handler for an error notification. An error halts execution of the observable instance                                                       |
 | `complete`        | Optional. A handler for the execution-complete notification. Delayed values can continue to be delivered to the next handler after execution is complete |
-
-|
 
 An observer object can define any combination of these handlers. If you don't supply a handler for a notification type, the observer ignores notifications of that type.
 
@@ -701,6 +692,8 @@ A typical Angular `Route` has two properties:
 
 This tells the router to match that URL to `path: 'heroes'` and **display** the `HeroesComponent` when the **URL** is something like `localhost:4200/heroes`
 
+<br>
+
 ### **RouterModule.forRoot()**
 
 The `@ngModule` metadata initializes the router and starts it listening for browser location changes.
@@ -712,6 +705,8 @@ The following line adds the `RouterModule` to the `AppRoutingModule`, `imports` 
 **The method is called `forRoot()` because you configure the router at the application's root level. The `forRoot()` method supplies the service providers and directives needed for routing, and performs the initial navigation based n the curretn browser URL.**
 
 Next, `AppRoutingModule` exports `RouterModule` so it will be available throught the application: `exports: [ RouterModule ]`
+
+<br>
 
 ### **Add RouterOutlet**
 
@@ -725,7 +720,9 @@ The `RouterOutlet` is one of the router directives that became available to the 
 
 **Now** after adding /heroes to the URL the browser should display the list of heroes.
 
-### **Add a navigation link (routerLink)`**
+<br>
+
+### **Add a navigation link (routerLink)**
 
 Ideally, users should be able to click a link to navigate rather than pasting a route URL into the address bar.
 
@@ -748,6 +745,8 @@ The browser refreshes and displays the application title and heroes link, but no
 
 After clicking the link, the address bar updates to `/heroes` and the list of heroes appears.
 
+<br>
+
 ### **Add a dashboard view**
 
 Routing makes more sense when there are multiple views. So far there's only the heroes view.
@@ -761,12 +760,14 @@ The CLI generates the files for the `DashboardComponent` and declares it in `App
 Add this code into the `DashboardComponent`:
 https://angular.io/tutorial/toh-pt5#add-a-dashboard-view
 
+<br>
+
 `slice(x,y)` method returns selected elements in an array, as a new array.
 
 `x` == starting index
 `y` == ending index
 
-/////
+<br>
 
 The _template_ presents a grid of hero name links.
 
@@ -795,6 +796,8 @@ getHeroes(): void {
 }
 ```
 
+<br>
+
 ### **Add the dashboard route**
 
 To navigate to the dashboard, the router needs an appropriate route.
@@ -806,6 +809,8 @@ Import the `DashboardComponent` in the `app-routing-module.ts` file:
 Add a route to the `routes` array that matches a path to the `DashboardComponent`:
 
 `{ path: 'dashboard', component: DashboardComponent }`
+
+<br>
 
 ### **Add a default route**
 
@@ -848,6 +853,8 @@ The user should be able to get to these details in three ways:
 
 In this section we'll enable the navigation to the `HeroDetailComponent` and liberate it (set free) from the `HeroesComponent`.
 
+<br>
+
 ### **Delete _hero details_ from HeroesComponent**
 
 When user clicks a hero item in the `HeroesComponent`, the application should navigate to the `HeroDetailComponent`, replacing the heroes list view with the hero detail view. The heroes list view should no longer show hero details as it does now.
@@ -855,6 +862,8 @@ When user clicks a hero item in the `HeroesComponent`, the application should na
 Open the `HeroesComponent` template and delete the `<app-hero-detail> element from the bottom.
 
 Clicking a hero now does nothing. We'll fix it after enabling routing to the `HeroDetailComponent`.
+
+<br>
 
 ### **Add a _hero detail_ route**
 
@@ -880,6 +889,8 @@ const routes: Routes = [
   { path: 'heroes', component: HeroesComponent }
 ];
 ```
+
+<br>
 
 ### **DashboardComponent hero links**
 
@@ -924,6 +935,8 @@ Strip the `<li>` back to just its `*ngFor`, wrap the badge and name in an anchor
   </li>
 </ul>
 ```
+
+<br>
 
 ### **Remove dead code**
 
@@ -1039,11 +1052,7 @@ Like the `getHeroes()`, `getHero()` has asynchronous signature. It returns a _mo
 
 You'll be able to re-implement `getHero` as a real `Http` request without having to change the `HeroDetailComponent` that calls it.
 
-### **Try it**
-
-Click on a hero in the dashboard or in the heroes list and navigate to that hero's detail view.
-
-If you paste `localhost:4200/detail/11` in the browser address bar, the router will navigate to the detail view for the hero with `id: 11`, "Dr Nice".
+<br>
 
 ### **Find the way back**
 
@@ -1226,6 +1235,8 @@ Now the data loads from the mock server.
 
 You've swapped `of()` for `http.get()` and the application keeps working without any other changes because both functions return an `Observable<Hero[]>`.
 
+<br>
+
 #### **HttpClient methods return one value**
 
 All `HttpClient` methods return an RxJS `Observable` of something.
@@ -1235,6 +1246,8 @@ HTTP is a request/response protocol. You make a request, it returns a single res
 In general, an observable _can_ return multiple values over time. An observable from `HttpClient` always emits a single value and then completes, never to emit again.
 
 This particular `HttpClient.get()` call returns an `Observable<Hero[]>`; that is, "_an observable of hero arrays_". In practice, it will only return a single hero array.
+
+<br>
 
 #### **HttpClient.get() returns response data**
 
@@ -1247,6 +1260,8 @@ The server's data API determines the shape of the JSON data. The _Tour of Heroes
 Other APIs may bury the data that you want within an object. You might have to dig that data out by processing the `Observable` result with the RxJS `map()` opertator.
 
 `.`
+
+<br>
 
 #### **Error handling**
 
@@ -1274,6 +1289,8 @@ getHeroes(): Observable<Hero[]> {
 The `catchError()` operator intercepts an **`Observable` that failed**. The operator then passes the error to the error handling function.
 
 The following `handleError()` method reports the error and then returns an innocuous(harmless) result so that the application keeps working.
+
+<br>
 
 #### **handleError**
 
@@ -1329,6 +1346,8 @@ getHeroes(): Observable<Hero[]> {
 }
 ```
 
+<br>
+
 #### **Get hero by id**
 
 Most web APIs support a _get by id_ request in the form `:baseURL/:id`.
@@ -1354,6 +1373,8 @@ There are three significant differences from `getHeroes()`:
 - The server should respond with a single hero rather than an array of heroes
 - `getHero()` returns an `Observable<Hero>`("_an observable of Hero objects_") rather than an observable of hero _arrays_
 
+<br>
+
 #### **Update heroes**
 
 Edit a hero's name in the hero detail view. As you type, the hero name updates the heading at the top of the page. But when you click "go back button", the changes are lost.
@@ -1374,6 +1395,8 @@ save(): void {
   }
 }
 ```
+
+<br>
 
 #### **Add HeroService.updateHero()**
 
@@ -1455,6 +1478,8 @@ addHero(hero: Hero): Observable<Hero> {
     It calls `HttpClient.post()` instead of `put()`
     It expects the server to generate an id for the new hero, which it returns in the `Observable<Hero>` to the caller
 
+<br>
+
 ### **Delete a hero**
 
 Add the following button element to the `HeroesComponent` template:
@@ -1494,7 +1519,11 @@ The key points:
     You don't send data as you did with put() and post()
     You still send the httpOptions
 
+<br>
+
 ### **Search by name**
+
+<br>
 
 #### HeroService.searchHeroes()
 
@@ -1524,6 +1553,8 @@ The method returns immediately with an empty array if there is no search term. T
 
 In the `DashboardComponent` add the `<app-hero-search>` element:
 
+<br>
+
 #### **Create HeroSearchComponent**
 
 Create a HeroSearchComponent with the CLI:
@@ -1548,6 +1579,8 @@ Replace its (template's) contents with <input> and add a list of matching search
 ```
 
 `#searchBox` (the hashTag syntax) is a reference to the element, so you can use that reference to for example refer to it's value in any other element: `searchBox.value`
+
+<br>
 
 ##### **AsyncPipe**
 
@@ -1676,3 +1709,5 @@ Each operator works as follows:
 - `distinctUntilChanged()` ensures that a request is sent only if the filter text changed.
 
 - `switchMap()` calls the search service for each search term that makes it through `debounce()` and `distinctUntilChanged()`. It cancels and discards previous search observables, returning only the latest search service observable.
+
+<hr>
